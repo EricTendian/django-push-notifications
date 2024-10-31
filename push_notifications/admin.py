@@ -3,8 +3,8 @@ from django.contrib import admin, messages
 from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 
-from .exceptions import APNSServerError, GCMError, WebPushError
-from .models import APNSDevice, GCMDevice, WebPushDevice, WNSDevice
+from .exceptions import APNSServerError, ExpoError, GCMError, WebPushError
+from .models import APNSDevice, ExpoDevice, GCMDevice, WebPushDevice, WNSDevice
 from .settings import PUSH_NOTIFICATIONS_SETTINGS as SETTINGS
 
 
@@ -42,6 +42,8 @@ class DeviceAdmin(admin.ModelAdmin):
 				errors.append(str(e))
 			except APNSServerError as e:
 				errors.append(e.status)
+			except ExpoError as e:
+				errors.append(force_str(e))
 			except WebPushError as e:
 				errors.append(force_str(e))
 
@@ -52,8 +54,13 @@ class DeviceAdmin(admin.ModelAdmin):
 		# catch them here to display error msg.
 		if not bulk:
 			for r in ret:
-				if "error" in r["results"][0]:
-					errors.append(r["results"][0]["error"])
+				if "results" in r:
+					if "error" in r["results"][0]:
+						errors.append(r["results"][0]["error"])
+				else:
+					for key, value in r.items():
+						if value.lower() != "success":
+							errors.append(value)
 		else:
 			if "results" in ret[0][0]:
 				try:
@@ -175,6 +182,7 @@ class WebPushDeviceAdmin(DeviceAdmin):
 
 
 admin.site.register(APNSDevice, DeviceAdmin)
+admin.site.register(ExpoDevice, DeviceAdmin)
 admin.site.register(GCMDevice, GCMDeviceAdmin)
 admin.site.register(WNSDevice, DeviceAdmin)
 admin.site.register(WebPushDevice, WebPushDeviceAdmin)

@@ -5,7 +5,7 @@ from rest_framework.serializers import ModelSerializer, Serializer, ValidationEr
 from rest_framework.viewsets import ModelViewSet
 
 from ..fields import UNSIGNED_64BIT_INT_MAX_VALUE, hex_re
-from ..models import APNSDevice, GCMDevice, WebPushDevice, WNSDevice
+from ..models import APNSDevice, ExpoDevice, GCMDevice, WebPushDevice, WNSDevice
 from ..settings import PUSH_NOTIFICATIONS_SETTINGS as SETTINGS
 
 
@@ -85,6 +85,11 @@ class UniqueRegistrationSerializerMixin(Serializer):
 		if devices:
 			raise ValidationError({"registration_id": "This field must be unique."})
 		return attrs
+
+
+class ExpoDeviceSerializer(UniqueRegistrationSerializerMixin, ModelSerializer):
+	class Meta(DeviceSerializerMixin.Meta):
+		model = ExpoDevice
 
 
 class GCMDeviceSerializer(UniqueRegistrationSerializerMixin, ModelSerializer):
@@ -183,6 +188,15 @@ class APNSDeviceViewSet(DeviceViewSetMixin, ModelViewSet):
 
 
 class APNSDeviceAuthorizedViewSet(AuthorizedMixin, APNSDeviceViewSet):
+	pass
+
+
+class ExpoDeviceViewSet(DeviceViewSetMixin, ModelViewSet):
+	queryset = ExpoDevice.objects.all()
+	serializer_class = ExpoDeviceSerializer
+
+
+class ExpoDeviceAuthorizedViewSet(AuthorizedMixin, ExpoDeviceViewSet):
 	pass
 
 

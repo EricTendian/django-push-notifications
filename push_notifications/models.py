@@ -274,3 +274,61 @@ class WebPushDevice(Device):
 		from .webpush import webpush_send_message
 
 		return webpush_send_message(self, message, **kwargs)
+
+
+
+class ExpoDeviceManager(models.Manager):
+	def get_queryset(self):
+		return ExpoDeviceQuerySet(self.model)
+
+
+class ExpoDeviceQuerySet(models.query.QuerySet):
+	def send_message(self, message, **kwargs):
+		if self.exists():
+			from .expo import PushMessage
+			from .expo import send_message as expo_send_message
+
+			if not isinstance(message, PushMessage):
+				message = PushMessage(body=message, **kwargs)
+
+			app_ids = self.filter(active=True).order_by(
+				"application_id"
+			).values_list("application_id", flat=True).distinct()
+
+			res = []
+			for app_id in app_ids:
+				reg_ids = list(
+					self.filter(active=True, application_id=app_id).values_list(
+						"registration_id", flat=True
+					)
+				)
+				if reg_ids:
+					r = expo_send_message(reg_ids, message, application_id=app_id, **kwargs)
+					if hasattr(r, "keys"):
+						res += [r]
+					elif hasattr(r, "__getitem__"):
+						res += r
+			return res
+
+
+class ExpoDevice(Device):
+	registration_id = models.TextField(verbose_name=_("Expo Token"), unique=SETTINGS["UNIQUE_REG_ID"])
+	objects = ExpoDeviceManager()
+
+	class Meta:
+		verbose_name = _("Expo device")
+
+	@property
+	def device_id(self):
+		return None
+
+	def send_message(self, message, **kwargs):
+		from .expo import PushMessage, send_message as expo_send_message
+
+		if not isinstance(message, PushMessage):
+			message = PushMessage(body=message, **kwargs)
+
+		return expo_send_message(
+			self.registration_id, message,
+			application_id=self.application_id, **kwargs
+		)

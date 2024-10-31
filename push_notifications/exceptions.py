@@ -17,6 +17,11 @@ class APNSServerError(APNSError):
 		self.status = status
 
 
+# Expo
+class ExpoError(NotificationError):
+	pass
+
+
 # GCM
 class GCMError(NotificationError):
 	pass

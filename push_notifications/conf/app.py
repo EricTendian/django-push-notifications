@@ -24,6 +24,7 @@ MISSING_SETTING = (
 
 PLATFORMS = [
 	"APNS",
+	"EXPO",
 	"FCM",
 	"WNS",
 	"WP",
@@ -53,6 +54,9 @@ APNS_AUTH_CREDS_OPTIONAL = ["CERTIFICATE", "ENCRYPTION_ALGORITHM", "TOKEN_LIFETI
 APNS_OPTIONAL_SETTINGS = [
 	"USE_SANDBOX", "USE_ALTERNATIVE_PORT", "TOPIC"
 ]
+
+EXPO_REQUIRED_SETTINGS = []
+EXPO_OPTIONAL_SETTINGS = ["ACCESS_TOKEN"]
 
 FCM_REQUIRED_SETTINGS = []
 FCM_OPTIONAL_SETTINGS = [
@@ -177,6 +181,16 @@ class AppConfig(BaseConfig):
 			raise ImproperlyConfigured(
 				"The APNS certificate file at {!r} is not readable: {}".format(certfile, e)
 			)
+
+	def _validate_expo_config(self, application_id, application_config):
+		allowed = REQUIRED_SETTINGS + OPTIONAL_SETTINGS + EXPO_REQUIRED_SETTINGS + EXPO_OPTIONAL_SETTINGS
+
+		self._validate_allowed_settings(application_id, application_config, allowed)
+		self._validate_required_settings(
+			application_id, application_config, EXPO_REQUIRED_SETTINGS
+		)
+
+		application_config.setdefault("ACCESS_TOKEN", None)
 
 	def _validate_fcm_config(self, application_id, application_config):
 		allowed = (
@@ -334,6 +348,9 @@ class AppConfig(BaseConfig):
 
 	def get_apns_topic(self, application_id=None):
 		return self._get_application_settings(application_id, "APNS", "TOPIC")
+
+	def get_expo_access_token(self, application_id=None):
+		return self._get_application_settings(application_id, "EXPO", "ACCESS_TOKEN")
 
 	def get_wns_package_security_id(self, application_id=None):
 		return self._get_application_settings(application_id, "WNS", "PACKAGE_SECURITY_ID")
