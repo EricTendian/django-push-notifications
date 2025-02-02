@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("push_notifications", "0010_alter_gcmdevice_options_and_more"),
+        ("push_notifications", "0011_alter_apnsdevice_registration_id"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
