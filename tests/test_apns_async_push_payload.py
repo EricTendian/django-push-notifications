@@ -181,6 +181,44 @@ class APNSAsyncPushPayloadTest(TestCase):
 			mock.ANY, result
 		)
 
+	@mock.patch("push_notifications.apns_async.APNs", autospec=True)
+	def test_push_payload_with_mutable_content(self, mock_apns):
+		apns_send_message(
+			"123",
+			"Hello world",
+			mutable_content=True,
+			creds=TokenCredentials(key="aaa", key_id="bbb", team_id="ccc"),
+			sound="chime",
+			extra={"custom_data": 12345},
+			expiration=int(time.time()) + 3,
+		)
+
+		args, kwargs = mock_apns.return_value.send_notification.call_args
+		req = args[0]
+
+		# Assertions
+		self.assertTrue("mutable-content" in req.message["aps"])
+		self.assertEqual(req.message["aps"]["mutable-content"], 1)  # APNs expects 1 for True
+
+	@mock.patch("push_notifications.apns_async.APNs", autospec=True)
+	def test_push_payload_with_category(self, mock_apns):
+		apns_send_message(
+			"123",
+			"Hello world",
+			category="MESSAGE_CATEGORY",
+			creds=TokenCredentials(key="aaa", key_id="bbb", team_id="ccc"),
+			sound="chime",
+			extra={"custom_data": 12345},
+			expiration=int(time.time()) + 3,
+		)
+
+		args, kwargs = mock_apns.return_value.send_notification.call_args
+		req = args[0]
+
+		# Assertions
+		self.assertTrue("category" in req.message["aps"])
+		self.assertEqual(req.message["aps"]["category"], "MESSAGE_CATEGORY")  # Verify correct category value
+
 	# def test_bad_priority(self):
 	# 	with mock.patch("apns2.credentials.init_context"):
 	# 		with mock.patch("apns2.client.APNsClient.connect"):
@@ -188,3 +226,53 @@ class APNSAsyncPushPayloadTest(TestCase):
 	# 				self.assertRaises(APNSUnsupportedPriority, _apns_send, "123",
 	# 				 "_" * 2049, priority=24)
 	# 			s.assert_has_calls([])
+
+	@mock.patch("push_notifications.apns_async.APNs", autospec=True)
+	def test_push_payload_with_content_available_bool_true(self, mock_apns):
+		apns_send_message(
+			"123",
+			"Hello world",
+			content_available=True,
+			creds=TokenCredentials(key="aaa", key_id="bbb", team_id="ccc"),
+			extra={"custom_data": 12345},
+			expiration=int(time.time()) + 3,
+		)
+
+		args, kwargs = mock_apns.return_value.send_notification.call_args
+		req = args[0]
+
+		assert "content-available" in req.message["aps"]
+		assert req.message["aps"]["content-available"] == 1
+
+
+	@mock.patch("push_notifications.apns_async.APNs", autospec=True)
+	def test_push_payload_with_content_available_bool_false(self, mock_apns):
+		apns_send_message(
+			"123",
+			"Hello world",
+			content_available=False,
+			creds=TokenCredentials(key="aaa", key_id="bbb", team_id="ccc"),
+			extra={"custom_data": 12345},
+			expiration=int(time.time()) + 3,
+		)
+
+		args, kwargs = mock_apns.return_value.send_notification.call_args
+		req = args[0]
+
+		assert "content-available" not in req.message["aps"]
+
+
+	@mock.patch("push_notifications.apns_async.APNs", autospec=True)
+	def test_push_payload_with_content_available_not_set(self, mock_apns):
+		apns_send_message(
+			"123",
+			"Hello world",
+			creds=TokenCredentials(key="aaa", key_id="bbb", team_id="ccc"),
+			extra={"custom_data": 12345},
+			expiration=int(time.time()) + 3,
+		)
+
+		args, kwargs = mock_apns.return_value.send_notification.call_args
+		req = args[0]
+
+		assert "content-available" not in req.message["aps"]
