@@ -18,9 +18,9 @@ class DeviceAdmin(admin.ModelAdmin):
 	raw_id_fields = ("user",)
 
 	if hasattr(User, "USERNAME_FIELD"):
-		search_fields = ("name", "device_id", "user__%s" % (User.USERNAME_FIELD))
+		search_fields = ("name", "user__%s" % (User.USERNAME_FIELD))
 	else:
-		search_fields = ("name", "device_id")
+		search_fields = ("name",)
 
 	def send_messages(self, request, queryset, bulk=False):
 		"""
@@ -171,6 +171,27 @@ class GCMDeviceAdmin(DeviceAdmin):
 			)
 
 
+class APNSDeviceAdmin(DeviceAdmin):
+	if hasattr(User, "USERNAME_FIELD"):
+		search_fields = ("name", "device_id", "user__%s" % (User.USERNAME_FIELD))
+	else:
+		search_fields = ("name", "device_id")
+
+
+class WNSDeviceAdmin(DeviceAdmin):
+	if hasattr(User, "USERNAME_FIELD"):
+		search_fields = ("name", "device_id", "user__%s" % (User.USERNAME_FIELD))
+	else:
+		search_fields = ("name", "device_id")
+
+
+class ExpoDeviceAdmin(DeviceAdmin):
+	if hasattr(User, "USERNAME_FIELD"):
+		search_fields = ("name", "registration_id", "user__%s" % (User.USERNAME_FIELD))
+	else:
+		search_fields = ("name", "registration_id")
+
+
 class WebPushDeviceAdmin(DeviceAdmin):
 	list_display = ("__str__", "browser", "user", "active", "date_created")
 	list_filter = ("active", "browser")
@@ -181,8 +202,8 @@ class WebPushDeviceAdmin(DeviceAdmin):
 		search_fields = ("name", "registration_id")
 
 
-admin.site.register(APNSDevice, DeviceAdmin)
-admin.site.register(ExpoDevice, DeviceAdmin)
+admin.site.register(APNSDevice, APNSDeviceAdmin)
+admin.site.register(ExpoDevice, ExpoDeviceAdmin)
 admin.site.register(GCMDevice, GCMDeviceAdmin)
-admin.site.register(WNSDevice, DeviceAdmin)
+admin.site.register(WNSDevice, WNSDeviceAdmin)
 admin.site.register(WebPushDevice, WebPushDeviceAdmin)
